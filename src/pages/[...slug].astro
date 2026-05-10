@@ -1,0 +1,344 @@
+---
+import DocsLayout from '@/layouts/DocsLayout.astro'
+import { getPage, getAllCategories } from '@/lib/content'
+import { Badge } from '@/components/starwind/badge'
+
+export async function getStaticPaths() {
+  const categories = getAllCategories()
+  const paths: { params: { slug: string } }[] = []
+  
+  categories.forEach(category => {
+    category.pages.forEach(page => {
+      paths.push({
+        params: { slug: `${category.slug}/${page.slug}` }
+      })
+    })
+  })
+  
+  return paths
+}
+
+const { slug } = Astro.params
+const [category, pageSlug] = slug.split('/')
+const page = getPage(category, pageSlug)
+
+if (!page) {
+  return Astro.redirect('/')
+}
+
+const breadcrumbs = [
+  { label: 'Home', href: '/' },
+  { label: category.charAt(0).toUpperCase() + category.slice(1), href: `/${category}` },
+  { label: page.title, href: `/${slug}` }
+]
+---
+
+<DocsLayout 
+  title={page.title} 
+  description={page.description}
+  headings={page.headings}
+>
+  <!-- Breadcrumbs -->
+  <nav class="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+    {breadcrumbs.map((crumb, index) => (
+      <>
+        {index > 0 && (
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        )}
+        {index === breadcrumbs.length - 1 ? (
+          <span class="text-foreground">{crumb.label}</span>
+        ) : (
+          <a href={crumb.href} class="hover:text-foreground transition-colors">{crumb.label}</a>
+        )}
+      </>
+    ))}
+  </nav>
+
+  <!-- Page Header -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <Badge variant="secondary" class="text-xs">
+        {category}
+      </Badge>
+      <span class="text-muted-foreground">/</span>
+      <span class="text-sm text-muted-foreground">{page.slug}</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-4">
+      {page.title}
+    </h1>
+    {page.description && (
+      <p class="text-lg text-muted-foreground leading-relaxed">
+        {page.description}
+      </p>
+    )}
+  </div>
+
+  <!-- Content -->
+  <article class="prose-content" set:html={page.content} />
+</DocsLayout>
+
+<style is:global>
+  .prose-content {
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--foreground);
+  }
+
+  .prose-content > *:first-child {
+    margin-top: 0 !important;
+  }
+
+  /* Headings - minimal since renderer adds inline styles */
+  .prose-content h1 {
+    letter-spacing: -0.025em;
+  }
+  .prose-content h2 {
+    letter-spacing: -0.02em;
+  }
+  .prose-content h3 {
+    letter-spacing: -0.01em;
+  }
+
+  /* Paragraphs */
+  .prose-content p {
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.75;
+    color: var(--muted-foreground);
+  }
+
+  /* Links */
+  .prose-content a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .prose-content a:hover {
+    border-bottom-color: var(--primary);
+  }
+
+  /* Lists */
+  .prose-content ul,
+  .prose-content ol {
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+    padding-left: 1.625rem;
+  }
+
+  .prose-content ul {
+    list-style-type: disc;
+  }
+
+  .prose-content ol {
+    list-style-type: decimal;
+  }
+
+  .prose-content ul ul,
+  .prose-content ol ol,
+  .prose-content ul ol,
+  .prose-content ol ul {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose-content li {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.75;
+    color: var(--muted-foreground);
+  }
+
+  .prose-content li::marker {
+    color: var(--primary);
+  }
+
+  /* Inline code */
+  .prose-content :not(pre) > code {
+    background-color: rgba(99, 102, 241, 0.1);
+    color: var(--primary-accent);
+    padding: 0.2em 0.4em;
+    border-radius: 0.375rem;
+    font-size: 0.875em;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    word-break: break-word;
+  }
+
+  /* Code blocks */
+  .prose-content pre {
+    background: linear-gradient(145deg, #0f0f1a 0%, #16162a 100%);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .prose-content pre::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-accent));
+    border-radius: 0.75rem 0.75rem 0 0;
+    opacity: 0.5;
+  }
+
+  .prose-content pre code {
+    background-color: transparent;
+    color: #e2e8f0;
+    padding: 0;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    font-weight: 400;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Syntax highlighting */
+  .prose-content .hljs-keyword,
+  .prose-content .hljs-selector-tag,
+  .prose-content .hljs-literal,
+  .prose-content .hljs-section,
+  .prose-content .hljs-link {
+    color: #c084fc;
+  }
+  .prose-content .hljs-string,
+  .prose-content .hljs-title,
+  .prose-content .hljs-name,
+  .prose-content .hljs-type,
+  .prose-content .hljs-attribute,
+  .prose-content .hljs-symbol,
+  .prose-content .hljs-bullet,
+  .prose-content .hljs-addition,
+  .prose-content .hljs-variable,
+  .prose-content .hljs-template-tag,
+  .prose-content .hljs-template-variable {
+    color: #86efac;
+  }
+  .prose-content .hljs-comment,
+  .prose-content .hljs-quote,
+  .prose-content .hljs-deletion,
+  .prose-content .hljs-meta {
+    color: #64748b;
+  }
+  .prose-content .hljs-number,
+  .prose-content .hljs-regexp,
+  .prose-content .hljs-literal,
+  .prose-content .hljs-built_in,
+  .prose-content .hljs-builtin-name {
+    color: #fbbf24;
+  }
+  .prose-content .hljs-function,
+  .prose-content .hljs-tag {
+    color: #60a5fa;
+  }
+  .prose-content .hljs-params {
+    color: #e2e8f0;
+  }
+  .prose-content .hljs-operator,
+  .prose-content .hljs-punctuation {
+    color: #94a3b8;
+  }
+
+  /* Blockquotes */
+  .prose-content blockquote {
+    border-left: 3px solid var(--primary);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-style: italic;
+  }
+  .prose-content blockquote p {
+    margin: 0;
+    color: var(--muted-foreground);
+  }
+  .prose-content blockquote p:first-child::before {
+    content: '"';
+    font-size: 1.5em;
+    color: var(--primary);
+    margin-right: 0.25rem;
+    line-height: 0;
+  }
+
+  /* Tables */
+  .prose-content table {
+    width: 100%;
+    margin: 1.5rem 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .prose-content thead {
+    background-color: var(--muted);
+  }
+
+  .prose-content th {
+    padding: 0.875rem 1.25rem;
+    text-align: left;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prose-content td {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+    color: var(--muted-foreground);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prose-content tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .prose-content tbody tr:hover {
+    background-color: rgba(99, 102, 241, 0.03);
+  }
+
+  /* Horizontal rule */
+  .prose-content hr {
+    margin: 2.5rem 0;
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  /* Bold */
+  .prose-content strong {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  /* Italic */
+  .prose-content em {
+    color: var(--foreground);
+    font-style: italic;
+  }
+
+  /* Images */
+  .prose-content img {
+    border-radius: 0.75rem;
+    margin: 1.5rem 0;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Selection */
+  .prose-content ::selection {
+    background-color: rgba(99, 102, 241, 0.3);
+    color: var(--foreground);
+  }
+</style>

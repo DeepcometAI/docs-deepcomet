@@ -1,0 +1,73 @@
+---
+import '@/styles/starwind.css'
+import { getAllCategories } from '@/lib/content'
+import DocsHeader from '@/components/DocsHeader.astro'
+import DocsSidebar from '@/components/DocsSidebar.astro'
+import DocsTOC from '@/components/DocsTOC.astro'
+
+interface Props {
+  title: string
+  description?: string
+  headings?: Array<{ id: string; text: string; depth: number }>
+}
+
+const { title, description, headings = [] } = Astro.props
+const categories = getAllCategories()
+const currentPath = Astro.url.pathname
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} - Deepcomet AI Docs</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <DocsHeader />
+    
+    <div class="pt-16">
+      <DocsSidebar categories={categories} currentPath={currentPath} />
+      
+      <main class="lg:pl-72">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
+          <div class="flex gap-8 py-8">
+            <!-- Content -->
+            <div class="flex-1 min-w-0 max-w-4xl">
+              <slot />
+            </div>
+            
+            <!-- TOC -->
+            {headings.length > 0 && (
+              <DocsTOC headings={headings} class="hidden xl:block w-64 shrink-0" />
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Mobile sidebar toggle
+      const sidebarToggle = document.getElementById('sidebar-toggle')
+      const sidebar = document.getElementById('docs-sidebar')
+      const sidebarOverlay = document.getElementById('sidebar-overlay')
+
+      if (sidebarToggle && sidebar && sidebarOverlay) {
+        sidebarToggle.addEventListener('click', () => {
+          sidebar.classList.toggle('-translate-x-full')
+          sidebarOverlay.classList.toggle('hidden')
+        })
+
+        sidebarOverlay.addEventListener('click', () => {
+          sidebar.classList.add('-translate-x-full')
+          sidebarOverlay.classList.add('hidden')
+        })
+      }
+    </script>
+  </body>
+</html>

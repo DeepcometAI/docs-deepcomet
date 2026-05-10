@@ -1,0 +1,62 @@
+---
+interface Props {
+  headings: Array<{ id: string; text: string; depth: number }>
+  class?: string
+}
+
+const { headings, class: className } = Astro.props
+---
+
+<div class:list={['sticky top-24', className]}>
+  <h3 class="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-4">
+    On this page
+  </h3>
+  <nav class="space-y-1 border-l border-border/50">
+    {headings.map((heading) => (
+      <a
+        href={`#${heading.id}`}
+        class:list={[
+          "block py-1.5 pl-4 text-[13px] leading-relaxed transition-all duration-200 border-l-[1.5px] border-transparent hover:text-foreground toc-link",
+          heading.depth === 3 && 'ml-3 text-muted-foreground/80',
+          heading.depth === 2 && 'text-muted-foreground'
+        ]}
+        data-heading-id={heading.id}
+      >
+        {heading.text}
+      </a>
+    ))}
+  </nav>
+</div>
+
+<script>
+  // Highlight active heading on scroll
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          document.querySelectorAll('.toc-link').forEach(link => {
+            link.classList.remove('text-primary', 'border-primary')
+            link.classList.add('border-transparent')
+            if (!link.classList.contains('ml-3')) {
+              link.classList.add('text-muted-foreground')
+            } else {
+              link.classList.add('text-muted-foreground/80')
+            }
+          })
+          
+          const activeLink = document.querySelector(`.toc-link[data-heading-id="${entry.target.id}"]`)
+          if (activeLink) {
+            activeLink.classList.remove('text-muted-foreground', 'text-muted-foreground/80', 'border-transparent')
+            activeLink.classList.add('text-primary', 'border-primary')
+          }
+        }
+      })
+    },
+    { rootMargin: '-100px 0px -70% 0px' }
+  )
+
+  // Observe all headings
+  document.querySelectorAll('h2[id], h3[id]').forEach(heading => {
+    observer.observe(heading)
+  })
+</script>
