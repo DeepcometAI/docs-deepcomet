@@ -98,6 +98,44 @@ import ThemeToggle from '@/components/starwind/theme-toggle/ThemeToggle.astro'
 
 <script>
 (function() {
+  // Sidebar functionality
+  const sidebarToggle = document.getElementById('sidebar-toggle')
+  const sidebar = document.getElementById('docs-sidebar')
+  const sidebarOverlay = document.getElementById('sidebar-overlay')
+
+  function toggleSidebar() {
+    if (sidebar && sidebarOverlay) {
+      const isOpen = !sidebar.classList.contains('-translate-x-full')
+      
+      if (isOpen) {
+        sidebar.classList.add('-translate-x-full')
+        sidebarOverlay.classList.add('hidden', 'opacity-0')
+        document.body.style.overflow = ''
+      } else {
+        sidebar.classList.remove('-translate-x-full')
+        sidebarOverlay.classList.remove('hidden')
+        setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10)
+        document.body.style.overflow = 'hidden'
+      }
+    }
+  }
+
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', toggleSidebar)
+  }
+  
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', toggleSidebar)
+  }
+
+  // Close sidebar on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar && !sidebar.classList.contains('-translate-x-full')) {
+      toggleSidebar()
+    }
+  })
+
+  // Search functionality
   const searchDialog = document.getElementById('search-dialog')
   const searchOverlay = document.getElementById('search-overlay')
   const searchTrigger = document.getElementById('search-trigger')
